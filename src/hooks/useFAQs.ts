@@ -53,7 +53,17 @@ export function useFAQs() {
 
     const saveFAQ = async (faq: Partial<FAQEntry>) => {
         const isNew = !faq.id;
-        const entry = { question: faq.question, answer: faq.answer };
+        
+        // Remove any special characters, only allowing alphabets, numbers, commas, full stops, and spaces/newlines
+        const sanitize = (text?: string) => {
+            if (!text) return '';
+            return text.replace(/[^a-zA-Z0-9., \n\r]/g, '');
+        };
+
+        const entry = { 
+            question: sanitize(faq.question), 
+            answer: sanitize(faq.answer) 
+        };
 
         let result;
         if (isNew) {
