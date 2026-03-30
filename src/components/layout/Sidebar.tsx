@@ -32,7 +32,7 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
                 )}
             </div>
 
-            <nav className="nav-list" style={{ flex: 1, overflowY: 'auto' }}>
+            <nav className="nav-list" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
                 <SectionLabel isOpen={isOpen} label="Clinic Overview" />
                 <NavItem
                     icon={<Database size={20} />}
