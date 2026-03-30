@@ -34,14 +34,7 @@ export function Navbar({
                     {isSidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
                 </button>
 
-                <div className="search-input-wrapper">
-                    <Search className="icon" size={18} style={{ position: 'absolute', left: '12px', color: 'var(--muted)' }} />
-                    <input
-                        type="text"
-                        placeholder="Search appointments..."
-                        className="search-input"
-                    />
-                </div>
+    
 
                 <div className="divider-v"></div>
 
