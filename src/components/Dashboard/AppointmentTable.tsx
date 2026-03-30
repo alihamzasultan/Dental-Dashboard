@@ -27,16 +27,19 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
 
-    const filteredAppointments = appointments.filter((apt) => {
-        const matchesSearch =
-            (apt.patient_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (apt.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (apt.phone || '').includes(searchTerm);
+    const filteredAppointments = appointments
+        .filter((apt) => {
+            const matchesSearch =
+                (apt.patient_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (apt.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (apt.phone || '').includes(searchTerm);
 
-        const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+            const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
-    });
+            return matchesSearch && matchesStatus;
+        })
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
 
     if (loading) return <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)' }}>Loading appointments...</div>;
     if (error) return <div style={{ padding: '48px', textAlign: 'center', color: '#ef4444' }}>Error: {error}</div>;
@@ -92,8 +95,6 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                             <th>Location</th>
                             <th>Status</th>
                             <th>Confirm</th>
-                            <th>SMS</th>
-                            <th>Response</th>
                             <th>Reminder</th>
                             <th>Created At</th>
                             <th style={{ textAlign: 'right' }}>Actions</th>
@@ -139,20 +140,6 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                                     ) : (
                                         <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--muted)' }}>{apt.confirmation_status || 'PENDING'}</span>
                                     )}
-                                </td>
-                                <td>
-                                    {apt.canceled_via_sms ? (
-                                        <div title="Cancelled via SMS" style={{ display: 'flex', alignItems: 'center', color: '#ef4444' }}>
-                                            <XCircle size={14} />
-                                        </div>
-                                    ) : (
-                                        <span style={{ color: '#10b981' }}>—</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <span style={{ fontSize: '11px', color: 'var(--muted)', maxWidth: '120px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={apt.feedback_text || ''}>
-                                        {apt.feedback_text || '—'}
-                                    </span>
                                 </td>
                                 <td>
                                     {apt.reminder_sent === 'YES' ? (

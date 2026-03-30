@@ -34,7 +34,7 @@ export function Navbar({
                     {isSidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
                 </button>
 
-    
+
 
                 <div className="divider-v"></div>
 
@@ -105,17 +105,17 @@ export function Navbar({
                             <div style={{ flex: 1, overflowY: 'auto', backgroundColor: 'var(--card-bg)' }}>
                                 {notifications.length > 0 ? (
                                     notifications.map(n => (
-                                        <div key={n.id} 
+                                        <div key={n.id}
                                             onClick={() => markAsRead(n.id)}
-                                            style={{ 
+                                            style={{
                                                 padding: '16px', borderBottom: '1px solid var(--border)',
                                                 backgroundColor: n.isRead ? 'transparent' : 'var(--primary-light)',
                                                 cursor: 'pointer', transition: 'background 0.2s',
                                                 display: 'flex', gap: '12px'
                                             }}
                                         >
-                                            <div style={{ 
-                                                width: '32px', height: '32px', borderRadius: '8px', 
+                                            <div style={{
+                                                width: '32px', height: '32px', borderRadius: '8px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 backgroundColor: n.type === 'CONFIRMED' ? 'var(--status-completed-bg)' : n.type === 'CANCELLED' ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)',
                                                 color: n.type === 'CONFIRMED' ? 'var(--status-completed)' : n.type === 'CANCELLED' ? '#ef4444' : 'var(--primary)'
