@@ -1,20 +1,27 @@
 import { useState } from 'react';
-import { useUnansweredQuestions, ReviewStatus } from '../hooks/useUnansweredQuestions';
+import { useUnansweredQuestions } from '../hooks/useUnansweredQuestions';
 import { format } from 'date-fns';
-import { Search, Filter, Phone, MessageSquare, CheckCircle2, Plus, AlertCircle } from 'lucide-react';
-import { Badge } from '../components/ui/Badge';
+import { Search, Phone, Plus, AlertCircle, MapPin } from 'lucide-react';
 
 export function UnansweredQuestions() {
-    const { questions, loading, resolveQuestion } = useUnansweredQuestions();
+    const { questions, loading } = useUnansweredQuestions();
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<ReviewStatus | 'all'>('pending');
 
     const filteredQuestions = questions.filter(q => {
-        const matchesSearch = (q.question?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            q.caller_number.includes(searchTerm);
-        const matchesFilter = statusFilter === 'all' || q.status === statusFilter;
-        return matchesSearch && matchesFilter;
+        return (
+            (q.question?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            q.caller_number.includes(searchTerm) ||
+            (q.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+        );
     });
+
+    const handleAddToFAQ = (question: string) => {
+        // Navigate to FAQ page and pass pre-filled question via a custom event
+        const params = new URLSearchParams({ prefillQuestion: question });
+        window.dispatchEvent(new CustomEvent('navigate', { detail: 'faq' }));
+        // Store in sessionStorage so FAQManagement can pick it up
+        sessionStorage.setItem('faqPrefill', question);
+    };
 
     if (loading) return <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)' }}>Loading unanswered questions...</div>;
 
@@ -31,25 +38,11 @@ export function UnansweredQuestions() {
                         <Search className="icon" size={18} style={{ position: 'absolute', left: '12px', color: 'var(--muted)' }} />
                         <input
                             type="text"
-                            placeholder="Search by question or number..."
+                            placeholder="Search by question, number, or location..."
                             className="search-input"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <Filter size={18} style={{ color: 'var(--muted)' }} />
-                        <select
-                            className="search-input"
-                            style={{ paddingLeft: '16px', width: 'auto' }}
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
-                        >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending Review</option>
-                            <option value="resolved">Resolved</option>
-                        </select>
                     </div>
                 </div>
 
@@ -57,11 +50,11 @@ export function UnansweredQuestions() {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '150px' }}>Date</th>
+                                <th style={{ width: '140px' }}>Date</th>
                                 <th style={{ width: '150px' }}>Caller</th>
+                                <th style={{ width: '160px' }}>Location</th>
                                 <th>Unanswered Question</th>
-                                <th style={{ width: '200px' }}>Suggested Intent</th>
-                                <th style={{ width: '200px', textAlign: 'right' }}>Actions</th>
+                                <th style={{ width: '130px', textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,53 +72,24 @@ export function UnansweredQuestions() {
                                                 <span style={{ fontSize: '13px' }}>{q.caller_number}</span>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <p style={{ fontWeight: '700', fontSize: '14px', lineHeight: '1.4' }}>"{q.question}"</p>
-                                                {q.status === 'resolved' && (
-                                                    <span style={{ fontSize: '11px', color: 'var(--status-completed)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <CheckCircle2 size={12} /> Resolved
-                                                    </span>
-                                                )}
+                                        <td style={{ verticalAlign: 'top' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <MapPin size={14} style={{ color: 'var(--muted)' }} />
+                                                <span style={{ fontSize: '13px' }}>{q.location || '—'}</span>
                                             </div>
                                         </td>
-                                        <td style={{ verticalAlign: 'top' }}>
-                                            {q.suggested_intent ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '600', fontSize: '13px' }}>
-                                                    <MessageSquare size={14} />
-                                                    <span>{q.suggested_intent}</span>
-                                                </div>
-                                            ) : (
-                                                <span style={{ color: 'var(--muted)', fontSize: '12px', fontStyle: 'italic' }}>Not detected</span>
-                                            )}
+                                        <td>
+                                            <p style={{ fontWeight: '700', fontSize: '14px', lineHeight: '1.4' }}>"{q.question}"</p>
                                         </td>
                                         <td style={{ textAlign: 'right', verticalAlign: 'top' }}>
-                                            {q.status === 'pending' ? (
-                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                    <button
-                                                        onClick={() => resolveQuestion(q.id)}
-                                                        className="btn"
-                                                        style={{
-                                                            padding: '6px 12px',
-                                                            backgroundColor: 'var(--status-completed-bg)',
-                                                            color: 'var(--status-completed)',
-                                                            fontSize: '12px'
-                                                        }}
-                                                    >
-                                                        <CheckCircle2 size={14} />
-                                                        Mark Resolved
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-primary"
-                                                        style={{ padding: '6px 12px', fontSize: '12px' }}
-                                                    >
-                                                        <Plus size={14} />
-                                                        Add to FAQ
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span style={{ color: 'var(--muted)', fontSize: '12px' }}>Review completed</span>
-                                            )}
+                                            <button
+                                                onClick={() => handleAddToFAQ(q.question)}
+                                                className="btn btn-primary"
+                                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                                            >
+                                                <Plus size={14} />
+                                                Add to FAQ
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -134,9 +98,9 @@ export function UnansweredQuestions() {
                                     <td colSpan={5} style={{ textAlign: 'center', padding: '64px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', color: 'var(--muted)' }}>
                                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <CheckCircle2 size={24} />
+                                                <AlertCircle size={24} />
                                             </div>
-                                            <p style={{ fontStyle: 'italic' }}>All questions have been reviewed! Well done.</p>
+                                            <p style={{ fontStyle: 'italic' }}>No unanswered questions found.</p>
                                         </div>
                                     </td>
                                 </tr>

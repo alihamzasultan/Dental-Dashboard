@@ -65,10 +65,17 @@ function AppContent() {
         window.addEventListener('appointment-cancelled', handleCancelEvent);
         window.addEventListener('appointment-confirmed', handleConfirmEvent);
         window.addEventListener('follow-up-received', handleFollowUpEvent);
+        
+        const handleNavigate = (e: any) => {
+            if (e.detail) setActivePage(e.detail);
+        };
+        window.addEventListener('navigate', handleNavigate);
+
         return () => {
             window.removeEventListener('appointment-cancelled', handleCancelEvent);
             window.removeEventListener('appointment-confirmed', handleConfirmEvent);
             window.removeEventListener('follow-up-received', handleFollowUpEvent);
+            window.removeEventListener('navigate', handleNavigate);
         };
     }, [addNotification]);
 

@@ -81,14 +81,7 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
                     onClick={() => setActivePage('analytics')}
                     isOpen={isOpen}
                 />
-                <NavItem
-                    icon={<Bell size={20} />}
-                    label="Notifications"
-                    active={activePage === 'notifications'}
-                    onClick={() => setActivePage('notifications')}
-                    isOpen={isOpen}
-                    badge={3}
-                />
+
                 <NavItem
                     icon={<MessageSquare size={20} />}
                     label="SMS Templates"

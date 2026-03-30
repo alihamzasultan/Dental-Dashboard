@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-export type ReviewStatus = 'pending' | 'resolved';
-
 export interface UnansweredQuestion {
     id: string;
+    original_id: string;
     created_at: string;
     caller_number: string;
     question: string;
-    suggested_intent?: string;
-    status: ReviewStatus;
+    location?: string;
 }
 
 export function useUnansweredQuestions() {
@@ -25,15 +23,41 @@ export function useUnansweredQuestions() {
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.warn('Unanswered questions table may not exist, using demo data');
-                setQuestions([
-                    { id: '1', created_at: new Date().toISOString(), caller_number: '+1 (555) 012-3456', question: 'Do you offer Invisalign for teenagers?', suggested_intent: 'Invisalign Inquiry', status: 'pending' },
-                    { id: '2', created_at: new Date(Date.now() - 86400000).toISOString(), caller_number: '+1 (555) 987-6543', question: 'What is the cost of a dental implant for a single tooth?', suggested_intent: 'Pricing Information', status: 'pending' },
-                ]);
-            } else {
-                setQuestions(data || []);
-            }
+            if (error) throw error;
+            
+            // Map table layout to correct interface, flat mapping arrays
+            const mappedData = (data || []).flatMap((item: any) => {
+                let parsedQuestions: string[] = [];
+                
+                let parsedQuestion = item.question || '';
+                try {
+                    if (typeof parsedQuestion === 'string' && parsedQuestion.startsWith('[')) {
+                        const parsed = JSON.parse(parsedQuestion);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            parsedQuestions = parsed;
+                        } else {
+                            parsedQuestions = [parsedQuestion];
+                        }
+                    } else if (Array.isArray(item.question) && item.question.length > 0) {
+                        parsedQuestions = item.question;
+                    } else {
+                        parsedQuestions = [item.question || ''];
+                    }
+                } catch(e) {
+                    parsedQuestions = [item.question || ''];
+                }
+
+                return parsedQuestions.map((q, index) => ({
+                    id: `${item.id?.toString() || Math.random().toString()}-${index}`,
+                    original_id: item.id?.toString() || '',
+                    created_at: item.created_at,
+                    caller_number: item.phone || 'Unknown',
+                    question: q,
+                    location: item.location || 'Unknown'
+                }));
+            });
+            
+            setQuestions(mappedData);
         } catch (err: any) {
             console.error('Error fetching questions:', err);
             setError(err.message);
@@ -46,17 +70,5 @@ export function useUnansweredQuestions() {
         fetchQuestions();
     }, [fetchQuestions]);
 
-    const resolveQuestion = async (id: string) => {
-        const { error } = await supabase
-            .from('unanswered_questions')
-            .update({ status: 'resolved' })
-            .eq('id', id);
-
-        if (!error) {
-            setQuestions(curr => curr.map(q => q.id === id ? { ...q, status: 'resolved' } : q));
-        }
-        return { error };
-    };
-
-    return { questions, loading, error, refresh: fetchQuestions, resolveQuestion };
+    return { questions, loading, error, refresh: fetchQuestions };
 }

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -28,7 +29,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = '600px' }: 
 
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <div className="modal-overlay animate-in">
             <div className="modal-content" style={{ maxWidth: maxWidth }}>
                 <header className="modal-header">
@@ -45,6 +46,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = '600px' }: 
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
