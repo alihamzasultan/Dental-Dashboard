@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
                     active={activePage === 'unanswered'}
                     onClick={() => setActivePage('unanswered')}
                     isOpen={isOpen}
-                    badge={2}
+                    
                 />
                 <NavItem
                     icon={<HelpCircle size={20} />}
