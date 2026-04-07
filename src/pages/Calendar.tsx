@@ -12,7 +12,15 @@ export function CalendarView() {
     const [date, setDate] = useState<Date>(new Date());
     const [view, setView] = useState<'day' | 'week' | 'month'>('week');
 
-    const appointmentsOnDate = (d: Date) => appointments.filter(a => isSameDay(new Date(a.appointment_time), d));
+    const appointmentsOnDate = (d: Date) => appointments.filter(a => {
+        if (!a.appointment_time || a.status === 'cancelled') return false;
+        
+        let aptDate: Date;
+        // Handle postgres spacing
+        const timeStr = a.appointment_time.replace(' ', 'T'); 
+        aptDate = new Date(timeStr);
+        return isSameDay(aptDate, d);
+    });
 
     const handlePrev = () => {
         if (view === 'day') setDate(subDays(date, 1));
@@ -35,7 +43,7 @@ export function CalendarView() {
         : [date];
 
     const timeSlots: string[] = [];
-    const slotDuration = settings.slot_duration || 15;
+    const slotDuration = 60;
     for (let i = 8 * 60; i < 20 * 60; i += slotDuration) {
         const h = Math.floor(i / 60);
         const m = i % 60;
@@ -67,7 +75,7 @@ export function CalendarView() {
                              view === 'week' ? `${format(startOfWeek(date), 'MMM d')} - ${format(endOfWeek(date), 'MMM d, yyyy')}` :
                              format(date, 'MMMM d, yyyy')}
                         </h2>
-                        <button onClick={handleToday} className="btn-text" style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)' }}>Today</button>
+                        <button onClick={handleToday} className="btn" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', backgroundColor: 'var(--primary-light)', padding: '4px 12px', borderRadius: '12px', border: 'none' }}>Today</button>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={handlePrev} className="btn" style={{ padding: '8px' }}><ChevronLeft size={20} /></button>
@@ -128,7 +136,8 @@ export function CalendarView() {
 
                                             {/* Appointments */}
                                             {apts.map(apt => {
-                                                const aptTime = new Date(apt.appointment_time);
+                                                const aptTimeStr = apt.appointment_time.replace(' ', 'T');
+                                                const aptTime = new Date(aptTimeStr);
                                                 const aptTypes = settings.appointment_types || [];
                                                 const aptType = aptTypes.find(t => t.name === apt.reason_for_visit) || aptTypes[0] || { color: '#3b82f6', duration: 30, name: 'Other' };
                                                 const startHour = aptTime.getHours();

@@ -18,8 +18,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_EMAIL = 'arsalan.zubair@kodexolabs.com';
-const ADMIN_PASSWORD = 'kodexolabs123';
+const ADMIN_EMAIL = 'admin@gmail.com';
+const ADMIN_PASSWORD = 'admin';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<SimpleUser | null>(null);

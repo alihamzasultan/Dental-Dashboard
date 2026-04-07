@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Eye, Edit3, Calendar, XCircle, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Eye, Edit3, Calendar, XCircle, Trash2, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import { Appointment, useAppointments } from '../../hooks/useAppointments';
 import { Badge } from '../ui/Badge';
 import { format, isValid } from 'date-fns';
@@ -49,7 +49,7 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
             {/* Table Headers/Controls */}
             <div className="table-header-row">
                 <div className="search-input-wrapper" style={{ maxWidth: '360px' }}>
-                    <Search className="icon" size={18} style={{ position: 'absolute', left: '12px', color: 'var(--muted)' }} />
+                    <Search size={16} strokeWidth={2.5} style={{ position: 'absolute', left: '12px', color: 'var(--muted)' }} />
                     <input
                         type="text"
                         placeholder="Search patient, email, phone..."
@@ -62,13 +62,20 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <select
                         style={{
-                            padding: '10px 16px',
+                            padding: '8px 36px 8px 16px',
                             borderRadius: '8px',
                             border: '1px solid var(--border)',
-                            backgroundColor: 'var(--input)',
-                            fontSize: '14px',
+                            backgroundColor: 'transparent',
+                            fontSize: '13px',
+                            fontWeight: '600',
                             color: 'var(--foreground)',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            outline: 'none',
+                            WebkitAppearance: 'none',
+                            backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right 12px top 50%',
+                            backgroundSize: '10px auto'
                         }}
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
@@ -83,11 +90,10 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
             </div>
 
             {/* Table Content */}
-            <div style={{ overflowX: 'auto' }}>
+            <div className="custom-scrollbar" style={{ overflowX: 'auto' }}>
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Patient</th>
                             <th>Contact</th>
                             <th>Reason</th>
@@ -96,18 +102,12 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                             <th>Status</th>
                             <th>Confirm</th>
                             <th>Reminder</th>
-                            <th>Created At</th>
                             <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredAppointments.map((apt) => (
                             <tr key={apt.id}>
-                                <td>
-                                    <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'monospace' }} title={apt.id}>
-                                        {apt.id.slice(0, 8)}...
-                                    </span>
-                                </td>
                                 <td>
                                     <span style={{ fontWeight: '700' }}>{apt.patient_name}</span>
                                 </td>
@@ -159,21 +159,12 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                                     )}
                                 </td>
                                 <td>
-                                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                                        {safeFormat(apt.created_at, 'MMM dd, HH:mm')}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                        <ActionButton icon={<Eye size={16} />} onClick={() => onView(apt)} tooltip="View Details" />
-                                        {role === 'Admin' && (
-                                            <>
-                                                <ActionButton icon={<Edit3 size={16} />} onClick={() => onEdit(apt)} tooltip="Edit" />
-                                                <ActionButton icon={<Calendar size={16} />} onClick={() => onReschedule(apt)} tooltip="Reschedule" />
-                                                <ActionButton icon={<XCircle size={16} />} onClick={() => onCancel(apt)} tooltip="Cancel" className="danger-btn" />
-                                                <ActionButton icon={<Trash2 size={16} />} onClick={() => onDelete(apt)} tooltip="Delete" className="danger-btn" />
-                                            </>
-                                        )}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                        <ActionMenu 
+                                            apt={apt} onView={onView} onEdit={onEdit} 
+                                            onReschedule={onReschedule} onCancel={onCancel} 
+                                            onDelete={onDelete} role={role} 
+                                        />
                                     </div>
                                 </td>
                             </tr>
@@ -188,29 +179,76 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
     );
 }
 
-function ActionButton({ icon, onClick, tooltip, className = "" }: { icon: React.ReactNode, onClick: () => void, tooltip: string, className?: string }) {
-    const isDanger = className.includes('danger');
+function ActionMenu({ apt, onView, onEdit, onReschedule, onCancel, onDelete, role }: any) {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
     return (
-        <button
+        <div style={{ position: 'relative' }} ref={menuRef}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '4px', color: 'var(--muted)' }}
+            >
+                <MoreVertical size={18} />
+            </button>
+            {isOpen && (
+                <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '100%',
+                    backgroundColor: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                    zIndex: 50,
+                    minWidth: '150px',
+                    padding: '8px 0',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                    <ActionMenuItem icon={<Eye size={14} />} label="View Details" onClick={() => { setIsOpen(false); onView(apt); }} />
+                    {role === 'Admin' && (
+                        <>
+                            <ActionMenuItem icon={<Edit3 size={14} />} label="Edit" onClick={() => { setIsOpen(false); onEdit(apt); }} />
+                            <ActionMenuItem icon={<Calendar size={14} />} label="Reschedule" onClick={() => { setIsOpen(false); onReschedule(apt); }} />
+                            <div style={{ height: '1px', backgroundColor: 'var(--border)', margin: '4px 0' }} />
+                            <ActionMenuItem icon={<XCircle size={14} />} label="Cancel" danger onClick={() => { setIsOpen(false); onCancel(apt); }} />
+                            <ActionMenuItem icon={<Trash2 size={14} />} label="Delete" danger onClick={() => { setIsOpen(false); onDelete(apt); }} />
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ActionMenuItem({ icon, label, onClick, danger }: any) {
+    return (
+        <button 
             onClick={onClick}
-            title={tooltip}
-            className="btn"
             style={{
-                padding: '8px',
-                backgroundColor: 'transparent',
-                color: isDanger ? '#ef4444' : 'var(--muted)',
-                borderRadius: '8px'
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '8px 16px', border: 'none', background: 'transparent',
+                color: danger ? '#ef4444' : 'var(--foreground)',
+                fontSize: '13px', fontWeight: '500', textAlign: 'left', cursor: 'pointer', width: '100%'
             }}
-            onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = isDanger ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)';
-                if (!isDanger) e.currentTarget.style.color = 'var(--primary)';
-            }}
-            onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = isDanger ? '#ef4444' : 'var(--muted)';
-            }}
+            onMouseOver={e => e.currentTarget.style.backgroundColor = danger ? 'rgba(239, 68, 68, 0.1)' : 'var(--input)'}
+            onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
         >
             {icon}
+            {label}
         </button>
     );
 }

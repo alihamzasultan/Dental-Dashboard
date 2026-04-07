@@ -199,6 +199,37 @@ export function DeleteConfirmationModal({ isOpen, onClose, onConfirm, patientNam
     );
 }
 
+export function CancelConfirmationModal({ isOpen, onClose, onConfirm, patientName }: { isOpen: boolean, onClose: () => void, onConfirm: () => Promise<void>, patientName: string }) {
+    const [isCanceling, setIsCanceling] = useState(false);
+
+    const handleConfirm = async () => {
+        setIsCanceling(true);
+        await onConfirm();
+        setIsCanceling(false);
+        onClose();
+    };
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Cancel Appointment" maxWidth="400px">
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                    <XCircle size={32} />
+                </div>
+                <div>
+                    <h4 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '8px' }}>Confirm Cancellation</h4>
+                    <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Are you sure you want to cancel the appointment for <strong>{patientName}</strong>?</p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={onClose} className="btn" style={{ flex: 1, padding: '12px', border: '1px solid var(--border)', backgroundColor: 'transparent' }}>Keep it</button>
+                    <button onClick={handleConfirm} disabled={isCanceling} className="btn" style={{ flex: 1, padding: '12px', backgroundColor: '#ef4444', color: 'white' }}>
+                        {isCanceling ? 'Canceling...' : 'Yes, Cancel'}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+    );
+}
+
 export function RescheduleModal({ isOpen, onClose, appointment, onSave }: { isOpen: boolean, onClose: () => void, appointment: Appointment | null, onSave: (time: string) => Promise<void> }) {
     const [newTime, setNewTime] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);

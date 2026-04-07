@@ -110,7 +110,7 @@ export function Analytics() {
                     <h1 className="page-title">Operational Analytics</h1>
                     <p className="page-subtitle">Detailed insights into AI performance and clinic efficiency.</p>
                 </div>
-                <div style={{ display: 'flex', backgroundColor: 'var(--input)', padding: '4px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', backgroundColor: 'var(--input)', padding: '4px', borderRadius: '8px' }}>
                     {['day', 'week', 'month'].map(range => (
                         <button
                             key={range}
@@ -118,11 +118,12 @@ export function Analytics() {
                             style={{
                                 padding: '8px 16px',
                                 border: 'none',
-                                borderRadius: '8px',
+                                borderRadius: '6px',
                                 fontSize: '12px',
-                                fontWeight: '700',
+                                fontWeight: '600',
                                 backgroundColor: timeRange === range ? 'var(--card)' : 'transparent',
-                                color: timeRange === range ? 'var(--primary)' : 'var(--muted)',
+                                color: timeRange === range ? 'var(--foreground)' : 'var(--muted)',
+                                boxShadow: timeRange === range ? 'var(--card-shadow)' : 'none',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s'
                             }}
@@ -201,8 +202,8 @@ export function Analytics() {
 function AnalyticCard({ label, value, delta, icon }: { label: string, value: string, delta: string, icon: React.ReactNode }) {
     const isNegative = delta.startsWith('-');
     return (
-        <div className="card" style={{ padding: '24px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="card" style={{ padding: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {icon}
             </div>
             <div>

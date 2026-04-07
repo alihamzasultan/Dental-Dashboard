@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppointments, Appointment } from '../hooks/useAppointments';
 import { AppointmentTable } from '../components/Dashboard/AppointmentTable';
-import { ViewAppointmentModal, EditAppointmentModal, DeleteConfirmationModal, RescheduleModal } from '../components/Dashboard/AppointmentModals';
+import { ViewAppointmentModal, EditAppointmentModal, DeleteConfirmationModal, RescheduleModal, CancelConfirmationModal } from '../components/Dashboard/AppointmentModals';
 import { Users, CalendarCheck, CalendarX, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,7 +11,7 @@ export function Dashboard() {
 
     // Modal States
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-    const [modalType, setModalType] = useState<'view' | 'edit' | 'delete' | 'reschedule' | null>(null);
+    const [modalType, setModalType] = useState<'view' | 'edit' | 'delete' | 'cancel' | 'reschedule' | null>(null);
 
     const stats = {
         total: appointments.length,
@@ -27,7 +27,7 @@ export function Dashboard() {
 
     return (
         <div className="animate-up">
-            <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
                     <h1 className="page-title">Appointment Dashboard</h1>
                     <p className="page-subtitle">Real-time monitoring and management of dental appointments.</p>
@@ -56,13 +56,6 @@ export function Dashboard() {
                     trend="-1%"
                     type="cancelled"
                 />
-                <StatCard
-                    label="Completed"
-                    value={stats.completed.toString()}
-                    icon={<CheckCircle2 size={20} />}
-                    trend="+8%"
-                    type="completed"
-                />
             </div>
 
             <div style={{ marginTop: '32px' }}>
@@ -70,10 +63,9 @@ export function Dashboard() {
                     onView={(apt) => { setSelectedAppointment(apt); setModalType('view'); }}
                     onEdit={(apt) => { setSelectedAppointment(apt); setModalType('edit'); }}
                     onReschedule={(apt) => { setSelectedAppointment(apt); setModalType('reschedule'); }}
-                    onCancel={async (apt) => {
-                        if (confirm(`Cancel appointment for ${apt.patient_name}?`)) {
-                            await updateAppointment(apt.id, { status: 'cancelled' });
-                        }
+                    onCancel={(apt) => {
+                        setSelectedAppointment(apt);
+                        setModalType('cancel');
                     }}
                     onDelete={(apt) => { setSelectedAppointment(apt); setModalType('delete'); }}
                 />
@@ -112,6 +104,14 @@ export function Dashboard() {
                     if (selectedAppointment) await deleteAppointment(selectedAppointment.id);
                 }}
             />
+            <CancelConfirmationModal
+                isOpen={modalType === 'cancel'}
+                onClose={closeModal}
+                patientName={selectedAppointment?.patient_name || ''}
+                onConfirm={async () => {
+                    if (selectedAppointment) await updateAppointment(selectedAppointment.id, { status: 'cancelled' });
+                }}
+            />
         </div>
     );
 }
@@ -128,18 +128,26 @@ function StatCard({ label, value, icon, trend, type }: { label: string, value: s
     const isPositive = trend.startsWith('+');
 
     return (
-        <div className="card stat-card">
-            <div className="stat-header">
-                <div className="stat-icon" style={{ backgroundColor: bg, color: color }}>
+        <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ 
+                    width: '40px', height: '40px', borderRadius: '8px', 
+                    backgroundColor: bg, color: color, 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                }}>
                     {icon}
                 </div>
-                <div className={`stat-trend ${isPositive ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
+                <div style={{
+                    padding: '4px 8px', borderRadius: '16px', fontSize: '11px', fontWeight: '700',
+                    backgroundColor: isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    color: isPositive ? '#10b981' : '#ef4444'
+                }}>
                     {trend}
                 </div>
             </div>
             <div>
-                <div className="stat-value">{value}</div>
-                <div className="stat-label">{label}</div>
+                <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--foreground)', lineHeight: '1.2' }}>{value}</div>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: '500', marginTop: '4px' }}>{label}</div>
             </div>
         </div>
     );

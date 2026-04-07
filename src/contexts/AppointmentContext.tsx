@@ -60,10 +60,11 @@ export function AppointmentProvider({ children }: { children: React.ReactNode })
 
             if (error) throw error;
 
-            let mappedData = (data || []).map(apt => ({
-                ...apt,
-                status: apt.status || 'booked'
-            }));
+            let mappedData = (data || []).map(apt => {
+                let s = apt.status || 'booked';
+                if (s.toLowerCase() === 'rescheduled') s = 'booked';
+                return { ...apt, status: s };
+            });
 
             setAppointments(mappedData);
         } catch (err: any) {
@@ -88,12 +89,19 @@ export function AppointmentProvider({ children }: { children: React.ReactNode })
                 },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        const newApt = { ...payload.new, status: (payload.new.status || 'booked') } as Appointment;
+                        let newStatus = payload.new.status || 'booked';
+                        if (newStatus.toLowerCase() === 'rescheduled') newStatus = 'booked';
+                        const newApt = { ...payload.new, status: newStatus } as Appointment;
+                        
+                        window.dispatchEvent(new CustomEvent('appointment-booked', { detail: newApt }));
+
                         if (!selectedLocation || selectedLocation.id === 'all' || newApt.location === selectedLocation.name) {
                             setAppointments((current) => [...current, newApt]);
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        const updatedApt = { ...payload.new, status: (payload.new.status || 'booked') } as Appointment;
+                        let newStatus = payload.new.status || 'booked';
+                        if (newStatus.toLowerCase() === 'rescheduled') newStatus = 'booked';
+                        const updatedApt = { ...payload.new, status: newStatus } as Appointment;
                         
                         setAppointments((current) => {
                             const oldApt = current.find(a => a.id === payload.new.id);

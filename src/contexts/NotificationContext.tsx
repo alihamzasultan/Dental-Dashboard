@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Notification {
     id: string;
-    type: 'CONFIRMED' | 'CANCELLED' | 'POSITIVE' | 'NEGATIVE' | 'INFO';
+    type: 'CONFIRMED' | 'CANCELLED' | 'POSITIVE' | 'NEGATIVE' | 'INFO' | 'NEW_BOOKING';
     message: string;
     patientName?: string;
     timestamp: string;

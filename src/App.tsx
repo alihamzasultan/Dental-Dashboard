@@ -22,7 +22,7 @@ function AppContent() {
     const { user, loading } = useAuth();
     const { addNotification } = useNotifications();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [activePage, setActivePage] = useState('appointments');
+    const [activePage, setActivePage] = useState('dashboard');
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'danger' | 'info' } | null>(null);
 
     useEffect(() => {
@@ -62,6 +62,18 @@ function AppContent() {
             });
             setTimeout(() => setToast(null), 8000);
         };
+        const handleBookedEvent = (e: any) => {
+            const apt = e.detail;
+            const msg = `New appointment booked for ${apt.patient_name || 'a patient'}.`;
+            setToast({ message: msg, type: 'info' });
+            addNotification({
+                type: 'NEW_BOOKING',
+                message: msg,
+                patientName: apt.patient_name
+            });
+            setTimeout(() => setToast(null), 8000);
+        };
+        window.addEventListener('appointment-booked', handleBookedEvent);
         window.addEventListener('appointment-cancelled', handleCancelEvent);
         window.addEventListener('appointment-confirmed', handleConfirmEvent);
         window.addEventListener('follow-up-received', handleFollowUpEvent);
@@ -72,6 +84,7 @@ function AppContent() {
         window.addEventListener('navigate', handleNavigate);
 
         return () => {
+            window.removeEventListener('appointment-booked', handleBookedEvent);
             window.removeEventListener('appointment-cancelled', handleCancelEvent);
             window.removeEventListener('appointment-confirmed', handleConfirmEvent);
             window.removeEventListener('follow-up-received', handleFollowUpEvent);
@@ -106,6 +119,7 @@ function AppContent() {
 
     const renderPage = () => {
         switch (activePage) {
+            case 'dashboard':
             case 'appointments': return <Dashboard />;
             case 'calendar': return <CalendarView />;
             case 'call-logs': return <CallLogs />;

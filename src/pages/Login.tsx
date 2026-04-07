@@ -4,8 +4,8 @@ import { LayoutDashboard, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export function Login() {
     const { login } = useAuth();
-    const [email, setEmail] = useState('arsalan.zubair@kodexolabs.com');
-    const [password, setPassword] = useState('kodexolabs123');
+    const [email, setEmail] = useState('admin@gmail.com');
+    const [password, setPassword] = useState('admin');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
