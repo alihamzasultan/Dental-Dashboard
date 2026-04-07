@@ -21,9 +21,20 @@ function AppContent() {
     const { theme } = useTheme();
     const { user, loading } = useAuth();
     const { addNotification } = useNotifications();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
     const [activePage, setActivePage] = useState('dashboard');
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'danger' | 'info' } | null>(null);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (mobile) setIsSidebarOpen(false);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const handleCancelEvent = (e: any) => {
@@ -145,10 +156,28 @@ function AppContent() {
 
     return (
         <div className={`app-container ${theme === 'dark' ? 'dark' : ''}`}>
+            {/* Mobile backdrop overlay */}
+            {isMobile && isSidebarOpen && (
+                <div
+                    onClick={() => setIsSidebarOpen(false)}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        zIndex: 39,
+                        backdropFilter: 'blur(2px)',
+                        animation: 'fadeIn 0.2s ease'
+                    }}
+                />
+            )}
+
             <Sidebar
                 isOpen={isSidebarOpen}
+                isMobile={isMobile}
                 activePage={activePage}
-                setActivePage={setActivePage}
+                setActivePage={(page) => {
+                    setActivePage(page);
+                    if (isMobile) setIsSidebarOpen(false);
+                }}
             />
 
             <div className="main-wrapper">
