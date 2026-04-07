@@ -23,7 +23,7 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
         <aside className={`sidebar ${isOpen ? '' : 'collapsed'}`}>
             <div className="sidebar-header">
                 <div className="sidebar-logo">
-                    <LayoutDashboard size={18} />
+                    <img src="/tooth.png" alt="DentalAI Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                 </div>
                 {isOpen && (
                     <span className="sidebar-brand">
@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
                     active={activePage === 'unanswered'}
                     onClick={() => setActivePage('unanswered')}
                     isOpen={isOpen}
-                    
+                    badge={2}
                 />
                 <NavItem
                     icon={<HelpCircle size={20} />}
