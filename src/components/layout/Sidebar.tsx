@@ -18,11 +18,12 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
     isOpen: boolean;
+    isMobile?: boolean;
     activePage: string;
     setActivePage: (page: string) => void;
 }
 
-export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
+export function Sidebar({ isOpen, isMobile = false, activePage, setActivePage }: SidebarProps) {
     const { user, role, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = React.useState(false);
     const userMenuRef = React.useRef<HTMLDivElement>(null);
@@ -51,7 +52,10 @@ export function Sidebar({ isOpen, activePage, setActivePage }: SidebarProps) {
     };
 
     return (
-        <aside className={`sidebar ${isOpen ? '' : 'collapsed'}`} style={{ backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)' }}>
+        <aside
+            className={`sidebar ${isOpen ? '' : 'collapsed'} ${isMobile ? 'sidebar-mobile' : ''} ${isMobile && !isOpen ? 'sidebar-mobile-hidden' : ''}`}
+            style={{ backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)' }}
+        >
             <div className="sidebar-header" style={{ borderBottom: 'none', padding: '16px 24px', height: 'auto', minHeight: 'var(--navbar-height)' }}>
                 <div ref={userMenuRef} style={{ position: 'relative', width: '100%' }}>
                     <button
