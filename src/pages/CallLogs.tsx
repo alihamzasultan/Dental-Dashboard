@@ -1,27 +1,54 @@
 import { useState } from 'react';
 import { useCallLogs, CallOutcome } from '../hooks/useCallLogs';
 import { format } from 'date-fns';
-import { Search, Filter, Phone, Clock, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Phone, Clock, MessageSquare, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
+import { useLocations } from '../contexts/LocationContext';
 
 export function CallLogs() {
     const { callLogs, loading } = useCallLogs();
+    const { selectedLocation } = useLocations();
     const [searchTerm, setSearchTerm] = useState('');
     const [outcomeFilter, setOutcomeFilter] = useState<CallOutcome | 'all'>('all');
 
     const filteredLogs = callLogs.filter(log => {
         const matchesSearch = (log.caller_number?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-        const matchesFilter = outcomeFilter === 'all' || log.outcome === outcomeFilter;
-        return matchesSearch && matchesFilter;
+        const matchesOutcome = outcomeFilter === 'all' || log.outcome === outcomeFilter;
+        
+        // Filter by location if one is selected
+        const matchesLocation = !selectedLocation || selectedLocation.id === 'all' || 
+                                (log.location && log.location.toLowerCase() === selectedLocation.name.toLowerCase());
+                                
+        return matchesSearch && matchesOutcome && matchesLocation;
     });
 
     if (loading) return <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted)' }}>Loading call logs...</div>;
 
     return (
         <div className="animate-up">
-            <header className="page-header">
-                <h1 className="page-title">Real-Time Call Logs</h1>
-                <p className="page-subtitle">Monitor incoming AI-handled calls and their outcomes in real-time.</p>
+            <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                    <h1 className="page-title">Real-Time Call Logs</h1>
+                    <p className="page-subtitle">Monitor incoming AI-handled calls and their outcomes in real-time.</p>
+                </div>
+                {selectedLocation && (
+                    <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        padding: '8px 16px', 
+                        backgroundColor: 'var(--primary-light)', 
+                        borderRadius: '20px',
+                        border: '1px solid var(--primary)',
+                        color: 'var(--primary)',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        marginBottom: '8px'
+                    }}>
+                        <MapPin size={16} />
+                        <span>Showing: {selectedLocation.name === 'All Locations' ? 'All Cities' : selectedLocation.name}</span>
+                    </div>
+                )}
             </header>
 
             <div className="table-container">
