@@ -101,7 +101,7 @@ h1, h2, h3, h4, h5, h6 {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease;
   z-index: 40;
   flex-shrink: 0;
   overflow-x: hidden;
@@ -109,6 +109,33 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar.collapsed {
   width: var(--sidebar-collapsed-width);
+}
+
+/* Mobile: full-width drawer that slides in from the left */
+.sidebar.sidebar-mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: var(--sidebar-width) !important;
+  transform: translateX(0);
+  z-index: 40;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar.sidebar-mobile.sidebar-mobile-hidden {
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+/* On mobile, main wrapper takes full width since sidebar is fixed overlay */
+@media (max-width: 767px) {
+  .sidebar:not(.sidebar-mobile) {
+    display: none;
+  }
+  .content-area {
+    padding: 20px 16px;
+  }
 }
 
 .main-wrapper {
