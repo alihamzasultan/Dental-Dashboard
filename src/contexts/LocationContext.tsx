@@ -26,9 +26,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
             setLoading(true);
             const hardcodedLocations: Location[] = [
                 { id: 'all', name: 'All Locations', city: 'Global' },
-                { id: 'austin', name: 'AUSTIN', city: 'Austin' },
-                { id: 'newyork', name: 'NEW YORK', city: 'New York' },
-                { id: 'sanfrancisco', name: 'SAN FRANCISCO', city: 'San Francisco' }
+                { id: 'austin', name: 'AU', city: 'Austin' },
+                { id: 'newyork', name: 'NY', city: 'New York' },
+                { id: 'sanfrancisco', name: 'SF', city: 'San Francisco' }
             ];
             setLocations(hardcodedLocations);
             setSelectedLocation(hardcodedLocations[0]);
