@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAppointments, Appointment } from '../hooks/useAppointments';
 import { AppointmentTable } from '../components/Dashboard/AppointmentTable';
 import { ViewAppointmentModal, EditAppointmentModal, DeleteConfirmationModal, RescheduleModal, CancelConfirmationModal } from '../components/Dashboard/AppointmentModals';
-import { Users, CalendarCheck, CalendarX, CheckCircle2 } from 'lucide-react';
+import { Users, CalendarCheck, CalendarX, CheckCircle2, RotateCcw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Dashboard() {
@@ -17,6 +17,7 @@ export function Dashboard() {
         total: appointments.length,
         booked: appointments.filter(a => a.status === 'booked').length,
         cancelled: appointments.filter(a => a.status === 'cancelled').length,
+        rescheduled: appointments.filter(a => a.status === 'rescheduled').length,
         completed: appointments.filter(a => a.status === 'completed').length,
     };
 
@@ -55,6 +56,13 @@ export function Dashboard() {
                     icon={<CalendarX size={20} />}
                     trend="-1%"
                     type="cancelled"
+                />
+                <StatCard
+                    label="Rescheduled"
+                    value={stats.rescheduled.toString()}
+                    icon={<RotateCcw size={20} />}
+                    trend="+1%"
+                    type="rescheduled"
                 />
             </div>
 
@@ -116,12 +124,13 @@ export function Dashboard() {
     );
 }
 
-function StatCard({ label, value, icon, trend, type }: { label: string, value: string, icon: React.ReactNode, trend: string, type: 'total' | 'booked' | 'cancelled' | 'completed' }) {
+function StatCard({ label, value, icon, trend, type }: { label: string, value: string, icon: React.ReactNode, trend: string, type: 'total' | 'booked' | 'cancelled' | 'completed' | 'rescheduled' }) {
     const config = {
         total: { color: 'var(--primary)', bg: 'var(--primary-light)' },
         booked: { color: 'var(--status-booked)', bg: 'var(--status-booked-bg)' },
         cancelled: { color: 'var(--status-cancelled)', bg: 'var(--status-cancelled-bg)' },
-        completed: { color: 'var(--status-completed)', bg: 'var(--status-completed-bg)' }
+        completed: { color: 'var(--status-completed)', bg: 'var(--status-completed-bg)' },
+        rescheduled: { color: 'var(--status-rescheduled)', bg: 'var(--status-rescheduled-bg)' }
     };
 
     const { color, bg } = config[type];
