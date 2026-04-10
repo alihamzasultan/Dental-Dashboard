@@ -40,7 +40,10 @@ export function Analytics() {
             return eachHourOfInterval({ start: startOfDay(now), end: now }).map(hour => {
                 const hourFormatted = format(hour, 'HH:00');
                 const calls = callLogs.filter(cl => isSameHour(new Date(cl.created_at), hour)).length;
-                const bookings = appointments.filter(apt => isSameHour(new Date(apt.created_at || apt.appointment_time), hour)).length;
+                const bookings = appointments.filter(apt => 
+                    (apt.status === 'booked' || apt.status === 'rescheduled' || apt.status === 'completed') &&
+                    isSameHour(new Date(apt.created_at || apt.appointment_time), hour)
+                ).length;
                 return { name: hourFormatted, calls, bookings };
             });
         } else if (timeRange === 'week') {
@@ -49,7 +52,10 @@ export function Analytics() {
             return eachDayOfInterval(interval).map(day => {
                 const dayName = format(day, 'EEE');
                 const calls = callLogs.filter(cl => isSameDay(new Date(cl.created_at), day)).length;
-                const bookings = appointments.filter(apt => isSameDay(new Date(apt.created_at || apt.appointment_time), day)).length;
+                const bookings = appointments.filter(apt => 
+                    (apt.status === 'booked' || apt.status === 'rescheduled' || apt.status === 'completed') &&
+                    isSameDay(new Date(apt.created_at || apt.appointment_time), day)
+                ).length;
                 return { name: dayName, calls, bookings };
             });
         } else {
@@ -58,7 +64,10 @@ export function Analytics() {
             return eachWeekOfInterval(interval).map((weekStart, index) => {
                 const weekLabel = `Week ${index + 1}`;
                 const calls = callLogs.filter(cl => isSameWeek(new Date(cl.created_at), weekStart)).length;
-                const bookings = appointments.filter(apt => isSameWeek(new Date(apt.created_at || apt.appointment_time), weekStart)).length;
+                const bookings = appointments.filter(apt => 
+                    (apt.status === 'booked' || apt.status === 'rescheduled' || apt.status === 'completed') &&
+                    isSameWeek(new Date(apt.created_at || apt.appointment_time), weekStart)
+                ).length;
                 return { name: weekLabel, calls, bookings };
             });
         }
@@ -68,8 +77,8 @@ export function Analytics() {
 
     // Calculate statistics
     const totalCalls = callLogs.length;
-    const resolvedCalls = callLogs.filter(cl => cl.outcome === 'resolved').length;
-    const bookedCalls = callLogs.filter(cl => cl.outcome === 'booked').length;
+    const resolvedCalls = callLogs.filter(cl => cl.outcome === 'completed' || cl.outcome === 'resolved').length;
+    const bookedCalls = callLogs.filter(cl => cl.outcome === 'booked' || cl.outcome === 'rescheduled').length;
     
     // Resolution Rate %
     const resolutionRate = totalCalls > 0 ? ((resolvedCalls / totalCalls) * 100).toFixed(1) : '0';
@@ -94,9 +103,9 @@ export function Analytics() {
     const avgHandlingTime = getAvgHandlingTime();
 
     const outcomeData = [
-        { name: 'Resolved', value: resolvedCalls, color: 'var(--status-completed)' },
+        { name: 'Resolved', value: resolvedCalls + bookedCalls, color: 'var(--status-completed)' },
         { name: 'Transferred', value: callLogs.filter(l => l.outcome === 'transferred').length, color: 'var(--status-booked)' },
-        { name: 'Abandoned', value: callLogs.filter(l => l.outcome === 'abandoned').length, color: '#ef4444' },
+        { name: 'Abandoned', value: callLogs.filter(l => l.outcome === 'abandoned' || l.outcome === 'cancelled').length, color: '#ef4444' },
     ];
 
     if (appointmentsLoading || callLogsLoading) {
