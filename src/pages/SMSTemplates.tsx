@@ -286,23 +286,6 @@ export function SMSTemplates() {
                         </p>
                     </div>
 
-                    <div className="card" style={{ padding: '24px', backgroundColor: 'var(--primary-light)', border: '1px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-                                <Info size={24} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                                <h4 style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '15px' }}>Smart Variables</h4>
-                            </div>
-                            <p style={{ fontSize: '13px', color: 'var(--foreground)', lineHeight: '1.6', marginBottom: '16px' }}>
-                                These templates support dynamic data binding. You can use complex expressions to pull data from your patient records.
-                            </p>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '12px' }}>
-                                <p style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '6px' }}>Example Expression:</p>
-                                <code style={{ fontSize: '11px', color: 'var(--foreground)', opacity: 0.8, wordBreak: 'break-all' }}>
-                                    {"{{ $json['Customer Name'] }}"}
-                                </code>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 

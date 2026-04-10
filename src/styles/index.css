@@ -493,6 +493,11 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 2px var(--ring);
 }
 
+.search-input option {
+  background-color: var(--card);
+  color: var(--foreground);
+}
+
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }

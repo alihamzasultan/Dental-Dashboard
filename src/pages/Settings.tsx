@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSettings, ClinicSettings } from '../hooks/useSettings';
 import { Bell, Zap, Calendar, Save, Trash2, Plus, Clock, Shield, X, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TokenEditor } from '../components/shared/TokenEditor';
 
 export function Settings() {
-    const { settings, loading, updateSettings } = useSettings();
+    const { settings, loading, updateSettings, addHoliday, removeHoliday } = useSettings();
     const { role } = useAuth();
     const [activeTab, setActiveTab] = useState<'reminders' | 'automation' | 'operations' | 'scheduling'>('reminders');
     const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +43,7 @@ export function Settings() {
                 <div style={{ padding: '32px' }}>
                     {activeTab === 'reminders' && <RemindersTab settings={settings} onSave={handleSave} isSaving={isSaving} isAdmin={role === 'Admin'} />}
                     {activeTab === 'automation' && <AutomationTab settings={settings} onSave={handleSave} isSaving={isSaving} isAdmin={role === 'Admin'} />}
-                    {activeTab === 'operations' && <OperationsTab settings={settings} onSave={handleSave} isSaving={isSaving} isAdmin={role === 'Admin'} />}
+                    {activeTab === 'operations' && <OperationsTab settings={settings} onSave={handleSave} isSaving={isSaving} isAdmin={role === 'Admin'} addHoliday={addHoliday} removeHoliday={removeHoliday} />}
                     {activeTab === 'scheduling' && <SchedulingTab settings={settings} onSave={handleSave} isSaving={isSaving} isAdmin={role === 'Admin'} />}
                 </div>
             </div>
@@ -176,12 +176,11 @@ function RemindersTab({ settings, onSave, isSaving, isAdmin }: { settings: Clini
             </SettingRow>
 
             <SettingRow title="Active Channels" description="The communication methods allowed for sending out reminders.">
-                <PillSelector options={['sms', 'email', 'voice']} selected={localSettings.reminder_channels} disabled={!isAdmin} onChange={(selected) => setLocalSettings({ ...localSettings, reminder_channels: selected })} />
+                <PillSelector options={['sms', 'email']} selected={localSettings.reminder_channels} disabled={!isAdmin} onChange={(selected) => setLocalSettings({ ...localSettings, reminder_channels: selected })} />
             </SettingRow>
 
-            <SettingRow title="Message Template" description="The exact wording sent out to patients as a reminder." isLast vertical>
-                <TokenEditor value={localSettings.reminder_template} onChange={(val) => setLocalSettings({ ...localSettings, reminder_template: val })} placeholder="Enter reminder template..." />
-            </SettingRow>
+
+
 
             <FooterSaveActions onSave={onSave} isSaving={isSaving} isAdmin={isAdmin} localSettings={localSettings} />
         </div>
@@ -209,13 +208,8 @@ function AutomationTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
                         </select>
                     </SettingRow>
 
-                    <SettingRow title="Delivery Channels" description="The communication methods allowed for sending out follow-ups.">
-                        <PillSelector options={['sms', 'email']} selected={localSettings.followup_channels} disabled={!isAdmin} onChange={(selected) => setLocalSettings({ ...localSettings, followup_channels: selected })} />
-                    </SettingRow>
 
-                    <SettingRow title="Feedback Template" description="The wording used asking patients for their feedback." isLast vertical>
-                        <TokenEditor value={localSettings.followup_template} onChange={(val) => setLocalSettings({ ...localSettings, followup_template: val })} placeholder="Enter follow-up template..." />
-                    </SettingRow>
+
                 </div>
             )}
 
@@ -224,18 +218,32 @@ function AutomationTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
     );
 }
 
-function OperationsTab({ settings, onSave, isSaving, isAdmin }: { settings: ClinicSettings, onSave: (u: Partial<ClinicSettings>) => void, isSaving: boolean, isAdmin: boolean }) {
+function OperationsTab({ settings, onSave, isSaving, isAdmin, addHoliday, removeHoliday }: { settings: ClinicSettings, onSave: (u: Partial<ClinicSettings>) => void, isSaving: boolean, isAdmin: boolean, addHoliday: (d: string) => Promise<any>, removeHoliday: (d: string) => Promise<any> }) {
     const [localSettings, setLocalSettings] = useState(settings);
+    const dateInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setLocalSettings(settings);
+    }, [settings]);
+
+    const handleHolidayChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const dateInput = e.target.value;
+        if (dateInput && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+            if (!localSettings.holidays.includes(dateInput)) {
+                const { error } = await addHoliday(dateInput);
+                if (error) alert(error);
+            } else {
+                alert('This holiday is already configured.');
+            }
+        }
+        // Reset the input value so the same date can be picked again if deleted
+        if (dateInputRef.current) dateInputRef.current.value = '';
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <SettingRow title="After-Hours Behavior" description="How should the system respond to inbound calls when the clinic is closed?">
-                <select className="search-input" value={localSettings.after_hours_behavior} disabled={!isAdmin} onChange={(e) => setLocalSettings({ ...localSettings, after_hours_behavior: e.target.value as any })}>
-                    <option value="voicemail">Send to Voicemail</option>
-                    <option value="callback">Offer Callback Request</option>
-                    <option value="message">Provide Automated Message</option>
-                </select>
-            </SettingRow>
+
+
 
             <SettingRow title="Holiday Closures" description="Specific global dates the clinic completely halts schedules." isLast vertical>
                 <div style={{ padding: '16px', backgroundColor: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', width: '100%' }}>
@@ -254,7 +262,12 @@ function OperationsTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
                                     {new Date(date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     {isAdmin && (
                                         <button
-                                            onClick={() => setLocalSettings({ ...localSettings, holidays: localSettings.holidays.filter((d: string) => d !== date) })}
+                                            onClick={async () => {
+                                                if (confirm(`Are you sure you want to remove ${date}?`)) {
+                                                    const { error } = await removeHoliday(date);
+                                                    if (error) alert(error);
+                                                }
+                                            }}
                                             style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                                         >
                                             <X size={14} />
@@ -264,20 +277,23 @@ function OperationsTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
                             ))
                         )}
                         {isAdmin && (
-                            <button
-                                className="btn"
-                                style={{ padding: '6px 16px', fontSize: '12px', backgroundColor: 'transparent', borderStyle: 'dashed' }}
-                                onClick={() => {
-                                    const dateInput = prompt('Enter holiday date (YYYY-MM-DD):');
-                                    if (dateInput && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-                                        if (!localSettings.holidays.includes(dateInput)) {
-                                            setLocalSettings({ ...localSettings, holidays: [...localSettings.holidays, dateInput].sort() });
-                                        }
-                                    }
-                                }}
-                            >
-                                <Plus size={14} /> Add Holiday
-                            </button>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="date"
+                                    ref={dateInputRef}
+                                    onChange={handleHolidayChange}
+                                    style={{
+                                        position: 'absolute', opacity: 0, width: 0, height: 0, top: 0, left: 0, pointerEvents: 'none'
+                                    }}
+                                />
+                                <button
+                                    className="btn"
+                                    style={{ padding: '6px 16px', fontSize: '12px', backgroundColor: 'transparent', borderStyle: 'dashed' }}
+                                    onClick={() => dateInputRef.current?.showPicker ? dateInputRef.current.showPicker() : dateInputRef.current?.click()}
+                                >
+                                    <Plus size={14} /> Add Holiday
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -300,80 +316,40 @@ function SchedulingTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <SettingRow title="Global Slot Duration" description="The foundational block of time interval your clinic schedules operate on.">
-                    <select className="search-input" value={localSettings.slot_duration} disabled={!isAdmin} onChange={(e) => setLocalSettings({ ...localSettings, slot_duration: parseInt(e.target.value) })}>
-                        <option value={15}>15 Minutes</option>
-                        <option value={30}>30 Minutes</option>
-                        <option value={45}>45 Minutes</option>
-                        <option value={60}>60 Minutes</option>
-                    </select>
-                </SettingRow>
+
+
+
             <SettingRow title="Business Hours Matrix" description="Standard active working hours for the clinic throughout the week." isLast vertical>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', width: '100%' }}>
-                        {Object.entries(localSettings.business_hours).map(([day, hours]: [string, any]) => (
-                            <div key={day} style={{ padding: '16px', backgroundColor: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px', opacity: hours.enabled ? 1 : 0.6 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: '700', textTransform: 'capitalize', fontSize: '13px' }}>{day}</span>
-                                    <ToggleSwitch checked={hours.enabled} disabled={!isAdmin} onChange={(c) => {
-                                        const newHours = { ...localSettings.business_hours, [day]: { ...hours, enabled: c } };
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', width: '100%' }}>
+                    {Object.entries(localSettings.business_hours).map(([day, hours]: [string, any]) => (
+                        <div key={day} style={{ padding: '16px', backgroundColor: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px', opacity: hours.enabled ? 1 : 0.6 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontWeight: '700', textTransform: 'capitalize', fontSize: '13px' }}>{day}</span>
+                                <ToggleSwitch checked={hours.enabled} disabled={!isAdmin} onChange={(c) => {
+                                    const newHours = { ...localSettings.business_hours, [day]: { ...hours, enabled: c } };
+                                    setLocalSettings({ ...localSettings, business_hours: newHours });
+                                }} />
+                            </div>
+                            {hours.enabled && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input type="time" className="search-input" style={{ fontSize: '12px', padding: '6px' }} value={hours.open} disabled={!isAdmin} onChange={(e) => {
+                                        const newHours = { ...localSettings.business_hours, [day]: { ...hours, open: e.target.value } };
+                                        setLocalSettings({ ...localSettings, business_hours: newHours });
+                                    }} />
+                                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>→</span>
+                                    <input type="time" className="search-input" style={{ fontSize: '12px', padding: '6px' }} value={hours.close} disabled={!isAdmin} onChange={(e) => {
+                                        const newHours = { ...localSettings.business_hours, [day]: { ...hours, close: e.target.value } };
                                         setLocalSettings({ ...localSettings, business_hours: newHours });
                                     }} />
                                 </div>
-                                {hours.enabled && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input type="time" className="search-input" style={{ fontSize: '12px', padding: '6px' }} value={hours.open} disabled={!isAdmin} onChange={(e) => {
-                                            const newHours = { ...localSettings.business_hours, [day]: { ...hours, open: e.target.value } };
-                                            setLocalSettings({ ...localSettings, business_hours: newHours });
-                                        }} />
-                                        <span style={{ fontSize: '12px', color: 'var(--muted)' }}>→</span>
-                                        <input type="time" className="search-input" style={{ fontSize: '12px', padding: '6px' }} value={hours.close} disabled={!isAdmin} onChange={(e) => {
-                                            const newHours = { ...localSettings.business_hours, [day]: { ...hours, close: e.target.value } };
-                                            setLocalSettings({ ...localSettings, business_hours: newHours });
-                                        }} />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </SettingRow>
-            <SettingRow title="Appointment Library Defaults" description="Manage treatment types, their intrinsic duration, visual colors, and prep/cleanup intervals." isLast vertical>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', width: '100%' }}>
-                        {isAdmin && <button onClick={handleAddType} className="btn"><Plus size={14} /> Add New Procedure</button>}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                        {localSettings.appointment_types.map((type: any) => (
-                            <div key={type.id} style={{ padding: '16px', backgroundColor: 'var(--background)', border: '1px solid var(--border)', borderRadius: '12px', display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                                <div style={{ width: '8px', alignSelf: 'stretch', borderRadius: '4px', backgroundColor: type.color }} />
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px', flex: 1 }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: '800', color: 'var(--muted)', letterSpacing: '0.05em' }}>NAME</label>
-                                        <input type="text" className="search-input" style={{ fontSize: '13px', height: '32px' }} value={type.name} disabled={!isAdmin} onChange={(e) => handleUpdateType(type.id, { name: e.target.value })} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: '800', color: 'var(--muted)', letterSpacing: '0.05em' }}>DURATION (MIN)</label>
-                                        <input type="number" className="search-input" style={{ fontSize: '13px', height: '32px' }} value={type.duration} disabled={!isAdmin} onChange={(e) => handleUpdateType(type.id, { duration: parseInt(e.target.value) || 0 })} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: '800', color: 'var(--muted)', letterSpacing: '0.05em' }}>COLOR TAG</label>
-                                        <input type="color" style={{ width: '100%', height: '32px', padding: '2px', borderRadius: '6px', border: '1px solid var(--border)', cursor: 'pointer', backgroundColor: 'transparent' }} value={type.color} disabled={!isAdmin} onChange={(e) => handleUpdateType(type.id, { color: e.target.value })} />
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '10px', fontWeight: '800', color: 'var(--muted)', letterSpacing: '0.05em' }}>BUFFER PRE / POST</label>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <input type="number" placeholder="Pre" className="search-input" style={{ fontSize: '12px', height: '32px' }} value={type.pre_buffer} disabled={!isAdmin} onChange={(e) => handleUpdateType(type.id, { pre_buffer: parseInt(e.target.value) || 0 })} />
-                                            <input type="number" placeholder="Post" className="search-input" style={{ fontSize: '12px', height: '32px' }} value={type.post_buffer} disabled={!isAdmin} onChange={(e) => handleUpdateType(type.id, { post_buffer: parseInt(e.target.value) || 0 })} />
-                                        </div>
-                                    </div>
-                                </div>
-                                {isAdmin && (
-                                    <button onClick={() => handleRemoveType(type.id)} className="btn" style={{ color: '#ef4444', padding: '6px', backgroundColor: 'transparent', alignSelf: 'center' }}>
-                                        <Trash2 size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </SettingRow>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </SettingRow>
+
+
+
 
             <FooterSaveActions onSave={onSave} isSaving={isSaving} isAdmin={isAdmin} localSettings={localSettings} />
         </div>

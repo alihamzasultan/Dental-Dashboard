@@ -61,8 +61,7 @@ export function AppointmentProvider({ children }: { children: React.ReactNode })
             if (error) throw error;
 
             let mappedData = (data || []).map(apt => {
-                let s = apt.status || 'booked';
-                if (s.toLowerCase() === 'rescheduled') s = 'booked';
+                const s = (apt.status || 'booked').toLowerCase();
                 return { ...apt, status: s };
             });
 
@@ -89,8 +88,7 @@ export function AppointmentProvider({ children }: { children: React.ReactNode })
                 },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        let newStatus = payload.new.status || 'booked';
-                        if (newStatus.toLowerCase() === 'rescheduled') newStatus = 'booked';
+                        const newStatus = (payload.new.status || 'booked').toLowerCase();
                         const newApt = { ...payload.new, status: newStatus } as Appointment;
                         
                         window.dispatchEvent(new CustomEvent('appointment-booked', { detail: newApt }));
@@ -99,8 +97,7 @@ export function AppointmentProvider({ children }: { children: React.ReactNode })
                             setAppointments((current) => [...current, newApt]);
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        let newStatus = payload.new.status || 'booked';
-                        if (newStatus.toLowerCase() === 'rescheduled') newStatus = 'booked';
+                        const newStatus = (payload.new.status || 'booked').toLowerCase();
                         const updatedApt = { ...payload.new, status: newStatus } as Appointment;
                         
                         setAppointments((current) => {

@@ -95,8 +95,8 @@ export function Sidebar({ isOpen, isMobile = false, activePage, setActivePage }:
                         </div>
                         {isOpen && (
                             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--foreground)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user?.email?.split('@')[0] || 'Staff User'}</span>
-                                <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--muted)' }}>{role}</span>
+                                <span style={{ fontSize: '14px', fontWeight: '800', color: 'var(--foreground)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>Dental Ai</span>
+                                <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--muted)' }}>Administrator</span>
                             </div>
                         )}
                     </button>
@@ -144,13 +144,6 @@ export function Sidebar({ isOpen, isMobile = false, activePage, setActivePage }:
                             label="Dashboard"
                             active={activePage === 'dashboard'}
                             onClick={() => setActivePage('dashboard')}
-                            isOpen={isOpen}
-                        />
-                        <NavItem
-                            icon={<Database size={18} strokeWidth={1.5} />}
-                            label="Available Cases"
-                            active={activePage === 'appointments'}
-                            onClick={() => setActivePage('appointments')}
                             isOpen={isOpen}
                         />
                         <NavItem

@@ -56,7 +56,7 @@ export function Navbar({
                     >
                         {locations.map(loc => (
                             <option key={loc.id} value={loc.id} style={{ background: 'var(--card)', color: 'var(--foreground)' }}>
-                                {loc.name}
+                                {loc.id === 'all' ? loc.name : loc.city}
                             </option>
                         ))}
                     </select>
