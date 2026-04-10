@@ -63,11 +63,12 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <select
+                        className="search-input"
                         style={{
                             padding: '8px 36px 8px 16px',
                             borderRadius: '8px',
                             border: '1px solid var(--border)',
-                            backgroundColor: 'transparent',
+                            backgroundColor: 'var(--card)',
                             fontSize: '13px',
                             fontWeight: '600',
                             color: 'var(--foreground)',
