@@ -34,7 +34,9 @@ export function AppointmentTable({ onView, onEdit, onReschedule, onCancel, onDel
                 (apt.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                 (apt.phone || '').includes(searchTerm);
 
-            const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+            const matchesStatus = statusFilter === 'all' || 
+                apt.status === statusFilter || 
+                (statusFilter === 'booked' && apt.status === 'rescheduled');
 
             return matchesSearch && matchesStatus;
         })
