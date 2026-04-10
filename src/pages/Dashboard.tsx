@@ -15,7 +15,7 @@ export function Dashboard() {
 
     const stats = {
         total: appointments.length,
-        booked: appointments.filter(a => a.status === 'booked').length,
+        booked: appointments.filter(a => a.status === 'booked' || a.status === 'rescheduled').length,
         cancelled: appointments.filter(a => a.status === 'cancelled').length,
         rescheduled: appointments.filter(a => a.status === 'rescheduled').length,
         completed: appointments.filter(a => a.status === 'completed').length,
