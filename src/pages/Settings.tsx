@@ -3,6 +3,7 @@ import { useSettings, ClinicSettings } from '../hooks/useSettings';
 import { Bell, Zap, Calendar, Save, Trash2, Plus, Clock, Shield, X, Info } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TokenEditor } from '../components/shared/TokenEditor';
+import { ConfirmationModal } from '../components/ui/ConfirmationModal';
 
 export function Settings() {
     const { settings, loading, updateSettings, addHoliday, removeHoliday } = useSettings();
@@ -220,6 +221,8 @@ function AutomationTab({ settings, onSave, isSaving, isAdmin }: { settings: Clin
 
 function OperationsTab({ settings, onSave, isSaving, isAdmin, addHoliday, removeHoliday }: { settings: ClinicSettings, onSave: (u: Partial<ClinicSettings>) => void, isSaving: boolean, isAdmin: boolean, addHoliday: (d: string) => Promise<any>, removeHoliday: (d: string) => Promise<any> }) {
     const [localSettings, setLocalSettings] = useState(settings);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [holidayToDelete, setHolidayToDelete] = useState<string | null>(null);
     const dateInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -262,11 +265,9 @@ function OperationsTab({ settings, onSave, isSaving, isAdmin, addHoliday, remove
                                     {new Date(date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     {isAdmin && (
                                         <button
-                                            onClick={async () => {
-                                                if (confirm(`Are you sure you want to remove ${date}?`)) {
-                                                    const { error } = await removeHoliday(date);
-                                                    if (error) alert(error);
-                                                }
+                                            onClick={() => {
+                                                setHolidayToDelete(date);
+                                                setIsDeleteModalOpen(true);
                                             }}
                                             style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                                         >
