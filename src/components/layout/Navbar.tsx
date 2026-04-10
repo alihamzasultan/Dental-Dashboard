@@ -37,9 +37,10 @@ export function Navbar({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
                     <MapPin size={18} style={{ color: 'var(--primary)' }} />
                     <select
+                        className="search-input"
                         style={{
                             padding: '0 12px', minWidth: '160px', height: '36px',
-                            backgroundColor: 'transparent', color: 'var(--foreground)',
+                            backgroundColor: 'var(--input)', color: 'var(--foreground)',
                             border: '1px solid var(--border)', borderRadius: '8px',
                             fontSize: '13px', fontWeight: '600', outline: 'none', cursor: 'pointer',
                             WebkitAppearance: 'none',
